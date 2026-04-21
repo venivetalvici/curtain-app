@@ -67,7 +67,6 @@ const vorhangOptions = [
 ];
 
 const vorhangschieneOptions = ['Gerade', 'L-Forme', 'U-Forme', 'Sonder'];
-
 const befestigungOptions = [
   'Deckenabhangträger <150cm',
   'Deckenabhangträger >150cm',
@@ -76,8 +75,13 @@ const befestigungOptions = [
   'Lösungsvorschlag',
   'Kombinierter Befestigungstyp (Bitte im Kommentar präzisieren)',
 ];
-
 const fotoOptions = Array.from({ length: 20 }, (_, i) => `Foto ${i + 1}`);
+
+const emptyProject = {
+  erstelltVon: '',
+  objektNummer: '',
+  objektAdresse: '',
+};
 
 const emptyDraft = {
   bereich: '',
@@ -95,88 +99,18 @@ const emptyDraft = {
 };
 
 const steps = [
-  {
-    key: 'bereich',
-    label: 'Bereich',
-    description: 'Wähle den Bereich aus der Projektliste.',
-    type: 'select',
-    options: bereichOptions,
-    required: true,
-  },
-  {
-    key: 'vorhang',
-    label: 'Vorhang / Referenznummer',
-    description: 'Wähle den passenden Vorhang oder die Referenznummer.',
-    type: 'select',
-    options: vorhangOptions,
-    required: true,
-  },
-  {
-    key: 'lichteDeckenhoehe',
-    label: 'Lichte Deckenhöhe',
-    description: 'Optionales Maß in Millimetern.',
-    type: 'number',
-  },
-  {
-    key: 'oberkanteVorhangschiene',
-    label: 'Oberkante Vorhangschiene',
-    description: 'Optionales Maß in Millimetern.',
-    type: 'number',
-  },
-  {
-    key: 'hoehe',
-    label: 'H - Höhe (mm)',
-    description: 'Endmaß für die Vorhanghöhe.',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'breite',
-    label: 'B - Breite (mm)',
-    description: 'Endmaß für die Vorhangbreite.',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'stueckzahl',
-    label: 'Stückzahl',
-    description: 'Wie viele Stück werden benötigt?',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'vorhangschiene',
-    label: 'Vorhangschiene',
-    description: 'Wähle die Form der Schiene.',
-    type: 'select',
-    options: vorhangschieneOptions,
-  },
-  {
-    key: 'vorhangschieneB',
-    label: 'Vorhangschiene B (mm)',
-    description: 'Breite / Länge der Schiene.',
-    type: 'number',
-  },
-  {
-    key: 'befestigungstypSchiene',
-    label: 'Befestigungstyp Schiene',
-    description: 'Wähle die passende Befestigung.',
-    type: 'select',
-    options: befestigungOptions,
-  },
-  {
-    key: 'foto',
-    label: 'Foto',
-    description: 'Verknüpfe den Eintrag mit einem Foto.',
-    type: 'select',
-    options: fotoOptions,
-  },
-  {
-    key: 'kommentar',
-    label: 'Kommentar',
-    description: 'Zusätzliche Hinweise für Bestellung oder Montage.',
-    type: 'textarea',
-  },
+  { key: 'bereich', label: 'Bereich', description: 'Wähle den Bereich aus der Projektliste.', type: 'select', options: bereichOptions, required: true },
+  { key: 'vorhang', label: 'Vorhang / Referenznummer', description: 'Wähle den passenden Vorhang oder die Referenznummer.', type: 'select', options: vorhangOptions, required: true },
+  { key: 'lichteDeckenhoehe', label: 'Lichte Deckenhöhe', description: 'Optionales Maß in Millimetern.', type: 'number' },
+  { key: 'oberkanteVorhangschiene', label: 'Oberkante Vorhangschiene', description: 'Optionales Maß in Millimetern.', type: 'number' },
+  { key: 'hoehe', label: 'H - Höhe (mm)', description: 'Endmaß für die Vorhanghöhe.', type: 'number', required: true },
+  { key: 'breite', label: 'B - Breite (mm)', description: 'Endmaß für die Vorhangbreite.', type: 'number', required: true },
+  { key: 'stueckzahl', label: 'Stückzahl', description: 'Wie viele Stück werden benötigt?', type: 'number', required: true },
+  { key: 'vorhangschiene', label: 'Vorhangschiene', description: 'Wähle die Form der Schiene.', type: 'select', options: vorhangschieneOptions },
+  { key: 'vorhangschieneB', label: 'Vorhangschiene B (mm)', description: 'Breite / Länge der Schiene.', type: 'number' },
+  { key: 'befestigungstypSchiene', label: 'Befestigungstyp Schiene', description: 'Wähle die passende Befestigung.', type: 'select', options: befestigungOptions },
+  { key: 'foto', label: 'Foto', description: 'Verknüpfe den Eintrag mit einem Foto.', type: 'select', options: fotoOptions },
+  { key: 'kommentar', label: 'Kommentar', description: 'Zusätzliche Hinweise für Bestellung oder Montage.', type: 'textarea' },
 ];
 
 function fieldIsValid(step, draft) {
@@ -184,23 +118,10 @@ function fieldIsValid(step, draft) {
   return String(draft[step.key] ?? '').trim() !== '';
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function WizardField({ step, value, onChange, onKeyDown }) {
   if (step.type === 'select') {
     return (
-      <select
-        className="wizard-input"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
-      >
+      <select className="wizard-input" value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKeyDown}>
         <option value="">Bitte auswählen</option>
         {step.options.map((option) => (
           <option key={option} value={option}>
@@ -235,20 +156,27 @@ function WizardField({ step, value, onChange, onKeyDown }) {
   );
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export default function App() {
+  const [projectInfo, setProjectInfo] = useState(emptyProject);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailTo, setEmailTo] = useState('');
   const [draft, setDraft] = useState(emptyDraft);
   const [items, setItems] = useState([]);
   const [stepIndex, setStepIndex] = useState(0);
   const [showReview, setShowReview] = useState(false);
-
   const [editingId, setEditingId] = useState(null);
   const [editingDraft, setEditingDraft] = useState(null);
 
   const currentStep = useMemo(() => steps[stepIndex], [stepIndex]);
-
-  const progress = Math.round(
-    ((showReview ? steps.length + 1 : stepIndex + 1) / (steps.length + 1)) * 100
-  );
+  const progress = Math.round(((showReview ? steps.length + 1 : stepIndex + 1) / (steps.length + 1)) * 100);
 
   const updateField = (key, value) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -256,12 +184,18 @@ export default function App() {
 
   const nextStep = () => {
     if (!fieldIsValid(currentStep, draft)) return;
-
     if (stepIndex < steps.length - 1) {
       setStepIndex((prev) => prev + 1);
     } else {
       setShowReview(true);
     }
+  };
+
+  const handleWizardKeyDown = (event) => {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+    if (currentStep.type === 'textarea') return;
+    event.preventDefault();
+    nextStep();
   };
 
   const prevStep = () => {
@@ -272,32 +206,18 @@ export default function App() {
     setStepIndex((prev) => Math.max(0, prev - 1));
   };
 
-  const handleWizardKeyDown = (event) => {
-    if (event.key !== 'Enter' || event.shiftKey) return;
-    if (currentStep.type === 'textarea') return;
-    event.preventDefault();
-    nextStep();
-  };
-
   const addItem = () => {
     setItems((prev) => [...prev, { ...draft, id: Date.now(), nummer: prev.length + 1 }]);
     setDraft(emptyDraft);
     setStepIndex(0);
     setShowReview(false);
-
     setTimeout(() => {
-      document.querySelector('.table-section')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
+      document.querySelector('.table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 120);
   };
 
   const removeItem = (id) => {
-    setItems((prev) =>
-      prev.filter((item) => item.id !== id).map((item, idx) => ({ ...item, nummer: idx + 1 }))
-    );
-
+    setItems((prev) => prev.filter((item) => item.id !== id).map((item, idx) => ({ ...item, nummer: idx + 1 })));
     if (editingId === id) {
       setEditingId(null);
       setEditingDraft(null);
@@ -316,7 +236,6 @@ export default function App() {
 
   const saveEditing = () => {
     if (!editingDraft) return;
-
     setItems((prev) => prev.map((item) => (item.id === editingId ? { ...editingDraft } : item)));
     setEditingId(null);
     setEditingDraft(null);
@@ -332,13 +251,11 @@ export default function App() {
   const handleEditingChange = (key, value, saveImmediately = false) => {
     setEditingDraft((prev) => {
       const next = { ...prev, [key]: value };
-
-      if (saveImmediately && editingId !== null) {
-        setItems((itemsPrev) =>
-          itemsPrev.map((item) => (item.id === editingId ? { ...next } : item))
-        );
+      if (saveImmediately) {
+        setTimeout(() => {
+          setItems((itemsPrev) => itemsPrev.map((item) => (item.id === editingId ? { ...next } : item)));
+        }, 0);
       }
-
       return next;
     });
   };
@@ -379,10 +296,41 @@ export default function App() {
       { wch: 12 },
       { wch: 28 },
     ];
-
     const wb = XLSX.utils.book_new();
+    const metaWs = XLSX.utils.json_to_sheet([
+      {
+        'Erstellt von': projectInfo.erstelltVon,
+        'Objekt Nummer': projectInfo.objektNummer,
+        'Objekt Adresse': projectInfo.objektAdresse,
+      },
+    ]);
+    XLSX.utils.book_append_sheet(wb, metaWs, 'Projekt');
     XLSX.utils.book_append_sheet(wb, ws, 'Vorhänge');
     XLSX.writeFile(wb, 'vorhaenge_bestellformular.xlsx');
+  };
+
+  const openEmailDraft = () => {
+    if (!emailTo.trim()) {
+      alert('Bitte E-Mail-Adresse eingeben.');
+      return;
+    }
+
+    const subject = `Aufmaß Vorhänge – ${projectInfo.objektNummer || 'Objekt'}`;
+    const body = [
+      'Hallo,',
+      '',
+      `${projectInfo.erstelltVon || 'Ein Mitarbeiter'} hat ein Aufmaß für das Objekt ${projectInfo.objektNummer || '-'} erstellt.`,
+      `Adresse des Objekts: ${projectInfo.objektAdresse || '-'}.`,
+      '',
+      `Im Tool wurden ${items.length} Position(en) erfasst.`,
+      'Bitte finden Sie die exportierte Tabelle im Anhang.',
+      '',
+      'Viele Grüße'
+    ].join('
+');
+
+    window.location.href = `mailto:${encodeURIComponent(emailTo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setShowEmailModal(false);
   };
 
   const exportPdf = () => {
@@ -454,19 +402,18 @@ export default function App() {
       </html>
     `;
 
-    const printFrame = document.createElement('iframe');
-    printFrame.style.position = 'fixed';
-    printFrame.style.right = '0';
-    printFrame.style.bottom = '0';
-    printFrame.style.width = '0';
-    printFrame.style.height = '0';
-    printFrame.style.border = '0';
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
 
-    document.body.appendChild(printFrame);
-
-    const frameDoc = printFrame.contentWindow?.document;
-    if (!frameDoc || !printFrame.contentWindow) {
-      document.body.removeChild(printFrame);
+    const frameDoc = iframe.contentWindow?.document;
+    if (!frameDoc || !iframe.contentWindow) {
+      document.body.removeChild(iframe);
       alert('PDF/Print konnte nicht geöffnet werden.');
       return;
     }
@@ -475,14 +422,13 @@ export default function App() {
     frameDoc.write(html);
     frameDoc.close();
 
-    setTimeout(() => {
-      printFrame.contentWindow?.focus();
-      printFrame.contentWindow?.print();
-
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
       setTimeout(() => {
-        document.body.removeChild(printFrame);
-      }, 1500);
-    }, 500);
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
   };
 
   return (
@@ -494,11 +440,7 @@ export default function App() {
           color: #0f172a;
           background: #f6f7fb;
         }
-
-        * {
-          box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
           margin: 0;
           background:
@@ -506,487 +448,155 @@ export default function App() {
             radial-gradient(circle at top right, rgba(14,165,233,0.09), transparent 22%),
             linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
         }
-
-        #root {
-          min-height: 100vh;
-        }
-
-        .page {
-          max-width: 1320px;
-          margin: 0 auto;
-          padding: 28px 20px 40px;
-        }
-
-        .hero,
-        .panel {
+        #root { min-height: 100vh; }
+        .page { max-width: 1320px; margin: 0 auto; padding: 28px 20px 40px; }
+        .hero, .panel {
           background: rgba(255,255,255,0.78);
           border: 1px solid rgba(148,163,184,0.18);
           box-shadow: 0 20px 60px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
           backdrop-filter: blur(12px);
           border-radius: 28px;
         }
-
-        .hero {
-          padding: 28px 30px;
-          margin-bottom: 22px;
-        }
-
-        .hero-top {
-          display: flex;
-          align-items: center;
-          gap: 18px;
-          margin-bottom: 12px;
-        }
-
+        .hero { padding: 28px 30px; margin-bottom: 22px; }
+        .hero-top { display: flex; align-items: center; gap: 18px; margin-bottom: 12px; }
         .logo-wrap {
-          width: 132px;
-          height: 54px;
+          width: 132px; height: 54px; display: flex; align-items: center; justify-content: center;
+          border-radius: 16px; background: rgba(255,255,255,0.7); border: 1px solid rgba(148,163,184,0.16);
+          overflow: hidden; flex-shrink: 0;
+        }
+        .logo-wrap img { max-width: 110px; max-height: 40px; object-fit: contain; }
+        .badge {
+          display: inline-flex; padding: 10px 14px; border-radius: 999px; font-size: 12px;
+          text-transform: uppercase; letter-spacing: .08em; background: rgba(79,70,229,0.08);
+          color: #4f46e5; border: 1px solid rgba(99,102,241,0.16); font-weight: 700;
+        }
+        .hero h1 { margin: 8px 0 6px; font-size: 44px; line-height: 1.02; letter-spacing: -0.03em; }
+        .hero p { margin: 0; max-width: 820px; color: #475569; font-size: 16px; line-height: 1.65; }
+        .stack-layout { display: flex; flex-direction: column; gap: 22px; }
+        .panel { padding: 24px; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .panel-head h2 { margin: 0; font-size: 30px; letter-spacing: -0.03em; }
+        .counter {
+          padding: 10px 14px; border-radius: 999px; font-size: 14px; color: #7c3aed;
+          background: rgba(124,58,237,0.08); border: 1px solid rgba(167,139,250,0.18); font-weight: 700;
+        }
+        .progress-box { margin-bottom: 22px; }
+        .progress-meta {
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+          font-size: 13px; color: #64748b; font-weight: 600;
+        }
+        .progress-bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+        .progress-value {
+          height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8b5cf6, #3b82f6); transition: width .25s ease;
+        }
+        .step-card {
+          min-height: 340px; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.9));
+          border: 1px solid rgba(148,163,184,0.14); padding: 22px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .step-kicker { color: #6366f1; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+        .step-card h3 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.03em; }
+        .step-card p { margin: 0 0 20px; color: #64748b; line-height: 1.6; max-width: 800px; }
+        .wizard-label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: #334155; }
+        .wizard-input, .wizard-textarea {
+          width: 100%; border-radius: 18px; border: 1px solid rgba(148,163,184,0.22); background: #fff;
+          color: #0f172a; outline: none; transition: .18s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .wizard-input { height: 58px; padding: 0 16px; font-size: 16px; }
+        .wizard-textarea { min-height: 150px; padding: 14px 16px; font-size: 15px; resize: vertical; }
+        .wizard-input:focus, .wizard-textarea:focus { border-color: rgba(59,130,246,0.52); box-shadow: 0 0 0 4px rgba(59,130,246,0.10); }
+        .error-text { margin-top: 10px; color: #dc2626; font-size: 13px; font-weight: 600; }
+        .wizard-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+        .btn { border: 0; cursor: pointer; border-radius: 16px; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; font-weight: 800; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+        .btn-secondary { height: 50px; padding: 0 18px; background: #fff; color: #334155; border: 1px solid rgba(148,163,184,0.24); }
+        .btn-primary { height: 50px; padding: 0 18px; color: white; background: linear-gradient(135deg, #8b5cf6, #3b82f6); box-shadow: 0 14px 30px rgba(99,102,241,0.18); }
+        .review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 4px; }
+        .review-item { background: #fff; border: 1px solid rgba(148,163,184,0.14); border-radius: 18px; padding: 14px; }
+        .review-item small { display: block; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; margin-bottom: 6px; }
+        .review-item div { color: #0f172a; font-size: 14px; line-height: 1.5; word-break: break-word; }
+        .project-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+        .project-grid-full {
+          grid-column: 1 / -1;
+        }
+        .table-top-actions { display: flex; justify-content: flex-end; margin-bottom: 14px; gap: 10px; }
+        .table-wrap { overflow: auto; border-radius: 22px; border: 1px solid rgba(148,163,184,0.14); background: rgba(255,255,255,0.78); }
+        table { width: 100%; min-width: 1560px; border-collapse: collapse; }
+        thead th { text-align: left; padding: 15px 14px; background: #f8fafc; color: #475569; font-size: 13px; border-bottom: 1px solid rgba(148,163,184,0.16); white-space: nowrap; }
+        tbody td { padding: 14px; border-bottom: 1px solid rgba(148,163,184,0.10); font-size: 14px; color: #0f172a; vertical-align: top; }
+        tbody tr:hover { background: rgba(99,102,241,0.03); }
+        .empty {
+          min-height: 360px; border: 1px dashed rgba(148,163,184,0.20); border-radius: 24px; display: grid; place-items: center;
+          padding: 26px; text-align: center; background: linear-gradient(180deg, #fafbff, #f8fafc);
+        }
+        .empty-icon {
+          width: 82px; height: 82px; border-radius: 26px; display: grid; place-items: center; margin: 0 auto 14px;
+          font-size: 28px; color: #6d28d9; background: rgba(124,58,237,0.10); border: 1px solid rgba(167,139,250,0.18);
+        }
+        .empty h3 { margin: 0 0 8px; font-size: 20px; }
+        .empty p { margin: 0; color: #64748b; line-height: 1.6; max-width: 460px; }
+        .delete-btn, .edit-btn, .save-btn, .cancel-btn {
+          height: 34px; padding: 0 12px; border-radius: 10px; font-weight: 800; cursor: pointer;
+        }
+        .delete-btn { background: rgba(239,68,68,0.08); color: #b91c1c; border: 1px solid rgba(239,68,68,0.14); }
+        .edit-btn { background: rgba(59,130,246,0.08); color: #1d4ed8; border: 1px solid rgba(59,130,246,0.14); }
+        .save-btn { background: rgba(34,197,94,0.10); color: #166534; border: 1px solid rgba(34,197,94,0.18); }
+        .cancel-btn { background: rgba(100,116,139,0.08); color: #334155; border: 1px solid rgba(148,163,184,0.16); }
+        .row-actions { display: flex; gap: 8px; align-items: center; }
+        .table-edit-input, .table-edit-textarea, .table-edit-select {
+          width: 100%; border: 1px solid rgba(148,163,184,0.25); border-radius: 10px; padding: 8px 10px; font-size: 13px; background: #fff; color: #0f172a;
+        }
+        .table-edit-textarea { min-height: 72px; resize: vertical; }
+        @media (max-width: 900px) {
+          .hero h1 { font-size: 36px; }
+          .review-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.35);
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.7);
-          border: 1px solid rgba(148,163,184,0.16);
-          overflow: hidden;
-          flex-shrink: 0;
+          padding: 20px;
+          z-index: 50;
         }
-
-        .logo-wrap img {
-          max-width: 110px;
-          max-height: 40px;
-          object-fit: contain;
-        }
-
-        .badge {
-          display: inline-flex;
-          padding: 10px 14px;
-          border-radius: 999px;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          background: rgba(79,70,229,0.08);
-          color: #4f46e5;
-          border: 1px solid rgba(99,102,241,0.16);
-          font-weight: 700;
-        }
-
-        .hero h1 {
-          margin: 8px 0 6px;
-          font-size: 44px;
-          line-height: 1.02;
-          letter-spacing: -0.03em;
-        }
-
-        .hero p {
-          margin: 0;
-          max-width: 820px;
-          color: #475569;
-          font-size: 16px;
-          line-height: 1.65;
-        }
-
-        .stack-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 22px;
-        }
-
-        .panel {
+        .modal-card {
+          width: min(560px, 100%);
+          background: white;
+          border-radius: 24px;
           padding: 24px;
+          border: 1px solid rgba(148,163,184,0.18);
+          box-shadow: 0 20px 60px rgba(15,23,42,0.16);
         }
-
-        .panel-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 18px;
-        }
-
-        .panel-head h2 {
-          margin: 0;
-          font-size: 30px;
-          letter-spacing: -0.03em;
-        }
-
-        .counter {
-          padding: 10px 14px;
-          border-radius: 999px;
-          font-size: 14px;
-          color: #7c3aed;
-          background: rgba(124,58,237,0.08);
-          border: 1px solid rgba(167,139,250,0.18);
-          font-weight: 700;
-        }
-
-        .progress-box {
-          margin-bottom: 22px;
-        }
-
-        .progress-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-          font-size: 13px;
-          color: #64748b;
-          font-weight: 600;
-        }
-
-        .progress-bar {
-          height: 10px;
-          border-radius: 999px;
-          background: #e2e8f0;
-          overflow: hidden;
-        }
-
-        .progress-value {
-          height: 100%;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #8b5cf6, #3b82f6);
-          transition: width .25s ease;
-        }
-
-        .step-card {
-          min-height: 340px;
-          border-radius: 24px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.9));
-          border: 1px solid rgba(148,163,184,0.14);
-          padding: 22px;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
-        }
-
-        .step-kicker {
-          color: #6366f1;
-          font-size: 12px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          margin-bottom: 10px;
-        }
-
-        .step-card h3 {
+        .modal-card h3 {
           margin: 0 0 8px;
-          font-size: 28px;
-          letter-spacing: -0.03em;
+          font-size: 24px;
         }
-
-        .step-card p {
-          margin: 0 0 20px;
+        .modal-card p {
+          margin: 0 0 16px;
           color: #64748b;
           line-height: 1.6;
-          max-width: 800px;
         }
-
-        .wizard-label {
-          display: block;
-          margin-bottom: 10px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #334155;
-        }
-
-        .wizard-input,
-        .wizard-textarea {
-          width: 100%;
-          border-radius: 18px;
-          border: 1px solid rgba(148,163,184,0.22);
-          background: #fff;
-          color: #0f172a;
-          outline: none;
-          transition: .18s ease;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
-        }
-
-        .wizard-input {
-          height: 58px;
-          padding: 0 16px;
-          font-size: 16px;
-        }
-
-        .wizard-textarea {
-          min-height: 150px;
-          padding: 14px 16px;
-          font-size: 15px;
-          resize: vertical;
-        }
-
-        .wizard-input:focus,
-        .wizard-textarea:focus,
-        .table-edit-input:focus,
-        .table-edit-textarea:focus,
-        .table-edit-select:focus {
-          border-color: rgba(59,130,246,0.52);
-          box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
-        }
-
-        .error-text {
-          margin-top: 10px;
-          color: #dc2626;
-          font-size: 13px;
-          font-weight: 600;
-        }
-
-        .wizard-actions {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          margin-top: 18px;
-        }
-
-        .btn {
-          border: 0;
-          cursor: pointer;
-          border-radius: 16px;
-          transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-          font-weight: 800;
-        }
-
-        .btn:hover {
-          transform: translateY(-1px);
-        }
-
-        .btn:disabled {
-          opacity: .45;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .btn-secondary {
-          height: 50px;
-          padding: 0 18px;
-          background: #fff;
-          color: #334155;
-          border: 1px solid rgba(148,163,184,0.24);
-        }
-
-        .btn-primary {
-          height: 50px;
-          padding: 0 18px;
-          color: white;
-          background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-          box-shadow: 0 14px 30px rgba(99,102,241,0.18);
-        }
-
-        .review-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-          margin-top: 4px;
-        }
-
-        .review-item {
-          background: #fff;
-          border: 1px solid rgba(148,163,184,0.14);
-          border-radius: 18px;
-          padding: 14px;
-        }
-
-        .review-item small {
-          display: block;
-          color: #64748b;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          font-weight: 800;
-          margin-bottom: 6px;
-        }
-
-        .review-item div {
-          color: #0f172a;
-          font-size: 14px;
-          line-height: 1.5;
-          word-break: break-word;
-        }
-
-        .table-top-actions {
-          display: flex;
-          justify-content: flex-end;
-          margin-bottom: 14px;
-          gap: 10px;
-        }
-
-        .table-wrap {
-          overflow: auto;
-          border-radius: 22px;
-          border: 1px solid rgba(148,163,184,0.14);
-          background: rgba(255,255,255,0.78);
-        }
-
-        table {
-          width: 100%;
-          min-width: 1560px;
-          border-collapse: collapse;
-        }
-
-        thead th {
-          text-align: left;
-          padding: 15px 14px;
-          background: #f8fafc;
-          color: #475569;
-          font-size: 13px;
-          border-bottom: 1px solid rgba(148,163,184,0.16);
-          white-space: nowrap;
-        }
-
-        tbody td {
-          padding: 14px;
-          border-bottom: 1px solid rgba(148,163,184,0.10);
-          font-size: 14px;
-          color: #0f172a;
-          vertical-align: top;
-        }
-
-        tbody tr:hover {
-          background: rgba(99,102,241,0.03);
-        }
-
-        .empty {
-          min-height: 360px;
-          border: 1px dashed rgba(148,163,184,0.20);
-          border-radius: 24px;
-          display: grid;
-          place-items: center;
-          padding: 26px;
-          text-align: center;
-          background: linear-gradient(180deg, #fafbff, #f8fafc);
-        }
-
-        .empty-icon {
-          width: 82px;
-          height: 82px;
-          border-radius: 26px;
-          display: grid;
-          place-items: center;
-          margin: 0 auto 14px;
-          font-size: 28px;
-          color: #6d28d9;
-          background: rgba(124,58,237,0.10);
-          border: 1px solid rgba(167,139,250,0.18);
-        }
-
-        .empty h3 {
-          margin: 0 0 8px;
-          font-size: 20px;
-        }
-
-        .empty p {
-          margin: 0;
-          color: #64748b;
-          line-height: 1.6;
-          max-width: 460px;
-        }
-
-        .delete-btn,
-        .edit-btn,
-        .save-btn,
-        .cancel-btn {
-          height: 34px;
-          padding: 0 12px;
-          border-radius: 10px;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .delete-btn {
-          background: rgba(239,68,68,0.08);
-          color: #b91c1c;
-          border: 1px solid rgba(239,68,68,0.14);
-        }
-
-        .edit-btn {
-          background: rgba(59,130,246,0.08);
-          color: #1d4ed8;
-          border: 1px solid rgba(59,130,246,0.14);
-        }
-
-        .save-btn {
-          background: rgba(34,197,94,0.10);
-          color: #166534;
-          border: 1px solid rgba(34,197,94,0.18);
-        }
-
-        .cancel-btn {
-          background: rgba(100,116,139,0.08);
-          color: #334155;
-          border: 1px solid rgba(148,163,184,0.16);
-        }
-
-        .row-actions {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
-
-        .table-edit-input,
-        .table-edit-textarea,
-        .table-edit-select {
-          width: 100%;
-          border: 1px solid rgba(148,163,184,0.25);
-          border-radius: 10px;
-          padding: 8px 10px;
-          font-size: 13px;
-          background: #fff;
-          color: #0f172a;
-        }
-
-        .table-edit-textarea {
-          min-height: 72px;
-          resize: vertical;
-        }
-
-        @media (max-width: 900px) {
-          .hero h1 {
-            font-size: 36px;
-          }
-
-          .review-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-
         @media (max-width: 720px) {
-          .page {
-            padding: 14px 12px 24px;
-          }
-
-          .hero,
-          .panel {
-            border-radius: 22px;
-            padding: 18px;
-          }
-
-          .panel-head {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .hero-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .hero h1 {
-            font-size: 30px;
-          }
-
-          .review-grid {
+          .project-grid {
             grid-template-columns: 1fr;
           }
-
-          .wizard-actions {
-            flex-direction: column;
+          .project-grid-full {
+            grid-column: auto;
           }
-
-          .btn-primary,
-          .btn-secondary {
-            width: 100%;
-          }
-
-          .row-actions {
-            flex-direction: column;
-            align-items: stretch;
-          }
+          .page { padding: 14px 12px 24px; }
+          .hero, .panel { border-radius: 22px; padding: 18px; }
+          .panel-head { flex-direction: column; align-items: flex-start; }
+          .hero-top { flex-direction: column; align-items: flex-start; }
+          .hero h1 { font-size: 30px; }
+          .review-grid { grid-template-columns: 1fr; }
+          .wizard-actions { flex-direction: column; }
+          .btn-primary, .btn-secondary { width: 100%; }
         }
       `}</style>
 
@@ -1000,13 +610,47 @@ export default function App() {
           </div>
           <h1>Vorhang Formular</h1>
           <p>
-            Светлая версия приложения с логотипом и пошаговым мастером. Сначала вопрос на
-            всю ширину, потом под ним таблица на всю ширину — без неудобного бокового
-            скролла между блоками.
+            Светлая версия приложения с логотипом и пошаговым мастером. Сначала вопрос на всю ширину, потом под ним таблица на всю ширину — без неудобного бокового скролла между блоками.
           </p>
         </section>
 
         <div className="stack-layout">
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Projektinformationen</h2>
+              <div className="counter">Zusatzdaten</div>
+            </div>
+
+            <div className="project-grid">
+              <div>
+                <label className="wizard-label">Erstellt von</label>
+                <input
+                  className="wizard-input"
+                  value={projectInfo.erstelltVon}
+                  onChange={(e) => setProjectInfo((prev) => ({ ...prev, erstelltVon: e.target.value }))}
+                  placeholder="Name des Mitarbeiters"
+                />
+              </div>
+              <div>
+                <label className="wizard-label">Objekt Nummer</label>
+                <input
+                  className="wizard-input"
+                  value={projectInfo.objektNummer}
+                  onChange={(e) => setProjectInfo((prev) => ({ ...prev, objektNummer: e.target.value }))}
+                  placeholder="z. B. BMW-001"
+                />
+              </div>
+              <div className="project-grid-full">
+                <label className="wizard-label">Objekt Adresse</label>
+                <input
+                  className="wizard-input"
+                  value={projectInfo.objektAdresse}
+                  onChange={(e) => setProjectInfo((prev) => ({ ...prev, objektAdresse: e.target.value }))}
+                  placeholder="Adresse des Objekts"
+                />
+              </div>
+            </div>
+          </section>
           <section className="panel">
             <div className="panel-head">
               <h2>Neue Position</h2>
@@ -1042,11 +686,7 @@ export default function App() {
                 )}
 
                 <div className="wizard-actions">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={prevStep}
-                    disabled={stepIndex === 0}
-                  >
+                  <button className="btn btn-secondary" onClick={prevStep} disabled={stepIndex === 0}>
                     Zurück
                   </button>
                   <button className="btn btn-primary" onClick={nextStep}>
@@ -1070,12 +710,8 @@ export default function App() {
                 </div>
 
                 <div className="wizard-actions">
-                  <button className="btn btn-secondary" onClick={prevStep}>
-                    Zurück
-                  </button>
-                  <button className="btn btn-primary" onClick={addItem}>
-                    In Tabelle übernehmen
-                  </button>
+                  <button className="btn btn-secondary" onClick={prevStep}>Zurück</button>
+                  <button className="btn btn-primary" onClick={addItem}>In Tabelle übernehmen</button>
                 </div>
               </div>
             )}
@@ -1084,16 +720,15 @@ export default function App() {
           <section className="panel table-section">
             <div className="panel-head">
               <h2>Bestelltabelle</h2>
-              <div className="counter">Export bereit</div>
+              <div className="counter">Excel bereit</div>
             </div>
 
             <div className="table-top-actions">
-              <button className="btn btn-secondary" onClick={exportPdf}>
-                PDF speichern
+              <button className="btn btn-secondary" onClick={() => setShowEmailModal(true)}>
+                E-Mail vorbereiten
               </button>
-              <button className="btn btn-secondary" onClick={exportExcel}>
-                Excel herunterladen
-              </button>
+              <button className="btn btn-secondary" onClick={exportPdf}>PDF speichern</button>
+              <button className="btn btn-secondary" onClick={exportExcel}>Excel herunterladen</button>
             </div>
 
             {items.length === 0 ? (
@@ -1128,254 +763,190 @@ export default function App() {
                   <tbody>
                     {items.map((item) => {
                       const isEditing = editingId === item.id;
-
                       return (
                         <tr key={item.id}>
                           <td>{item.nummer}</td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 value={editingDraft?.bereich || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('bereich', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('bereich', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.bereich || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.vorhang || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('vorhang', e.target.value, true)
-                                }
+                                onChange={(e) => handleEditingChange('vorhang', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
                                 {vorhangOptions.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
+                                  <option key={option} value={option}>{option}</option>
                                 ))}
                               </select>
                             ) : (
                               item.vorhang || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.lichteDeckenhoehe || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('lichteDeckenhoehe', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('lichteDeckenhoehe', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.lichteDeckenhoehe || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.oberkanteVorhangschiene || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('oberkanteVorhangschiene', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('oberkanteVorhangschiene', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.oberkanteVorhangschiene || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.hoehe || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('hoehe', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('hoehe', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.hoehe || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.breite || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('breite', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('breite', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.breite || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.stueckzahl || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('stueckzahl', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('stueckzahl', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.stueckzahl || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.vorhangschiene || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('vorhangschiene', e.target.value, true)
-                                }
+                                onChange={(e) => handleEditingChange('vorhangschiene', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
                                 {vorhangschieneOptions.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
+                                  <option key={option} value={option}>{option}</option>
                                 ))}
                               </select>
                             ) : (
                               item.vorhangschiene || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <input
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.vorhangschieneB || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('vorhangschieneB', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('vorhangschieneB', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.vorhangschieneB || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.befestigungstypSchiene || ''}
-                                onChange={(e) =>
-                                  handleEditingChange(
-                                    'befestigungstypSchiene',
-                                    e.target.value,
-                                    true
-                                  )
-                                }
+                                onChange={(e) => handleEditingChange('befestigungstypSchiene', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
                                 {befestigungOptions.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
+                                  <option key={option} value={option}>{option}</option>
                                 ))}
                               </select>
                             ) : (
                               item.befestigungstypSchiene || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.foto || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('foto', e.target.value, true)
-                                }
+                                onChange={(e) => handleEditingChange('foto', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
                                 {fotoOptions.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
+                                  <option key={option} value={option}>{option}</option>
                                 ))}
                               </select>
                             ) : (
                               item.foto || '—'
                             )}
                           </td>
-
                           <td>
                             {isEditing ? (
                               <textarea
                                 className="table-edit-textarea"
                                 value={editingDraft?.kommentar || ''}
-                                onChange={(e) =>
-                                  handleEditingChange('kommentar', e.target.value)
-                                }
+                                onChange={(e) => handleEditingChange('kommentar', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
                               item.kommentar || '—'
                             )}
                           </td>
-
                           <td>
                             <div className="row-actions">
                               {isEditing ? (
                                 <>
-                                  <button className="save-btn" onClick={saveEditing}>
-                                    Speichern
-                                  </button>
-                                  <button className="cancel-btn" onClick={cancelEditing}>
-                                    Abbrechen
-                                  </button>
+                                  <button className="save-btn" onClick={saveEditing}>Speichern</button>
+                                  <button className="cancel-btn" onClick={cancelEditing}>Abbrechen</button>
                                 </>
                               ) : (
                                 <>
-                                  <button
-                                    className="edit-btn"
-                                    onClick={() => startEditing(item)}
-                                  >
-                                    Bearbeiten
-                                  </button>
-                                  <button
-                                    className="delete-btn"
-                                    onClick={() => removeItem(item.id)}
-                                  >
-                                    Löschen
-                                  </button>
+                                  <button className="edit-btn" onClick={() => startEditing(item)}>Bearbeiten</button>
+                                  <button className="delete-btn" onClick={() => removeItem(item.id)}>Löschen</button>
                                 </>
                               )}
                             </div>
@@ -1389,6 +960,26 @@ export default function App() {
             )}
           </section>
         </div>
+
+        {showEmailModal && (
+          <div className="modal-overlay" onClick={() => setShowEmailModal(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <h3>E-Mail vorbereiten</h3>
+              <p>Das öffnet dein Mailprogramm mit vorbereitetem Text. Excel oder PDF kannst du danach anhängen.</p>
+              <label className="wizard-label">Senden an</label>
+              <input
+                className="wizard-input"
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+                placeholder="name@example.com"
+              />
+              <div className="wizard-actions">
+                <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>Abbrechen</button>
+                <button className="btn btn-primary" onClick={openEmailDraft}>E-Mail öffnen</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
