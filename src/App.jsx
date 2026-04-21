@@ -93,88 +93,18 @@ const emptyDraft = {
 };
 
 const steps = [
-  {
-    key: 'bereich',
-    label: 'Bereich',
-    description: 'Wähle den Bereich aus der Projektliste.',
-    type: 'select',
-    options: bereichOptions,
-    required: true,
-  },
-  {
-    key: 'vorhang',
-    label: 'Vorhang / Referenznummer',
-    description: 'Wähle den passenden Vorhang oder die Referenznummer.',
-    type: 'select',
-    options: vorhangOptions,
-    required: true,
-  },
-  {
-    key: 'lichteDeckenhoehe',
-    label: 'Lichte Deckenhöhe',
-    description: 'Optionales Maß in Millimetern.',
-    type: 'number',
-  },
-  {
-    key: 'oberkanteVorhangschiene',
-    label: 'Oberkante Vorhangschiene',
-    description: 'Optionales Maß in Millimetern.',
-    type: 'number',
-  },
-  {
-    key: 'hoehe',
-    label: 'H - Höhe (mm)',
-    description: 'Endmaß für die Vorhanghöhe.',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'breite',
-    label: 'B - Breite (mm)',
-    description: 'Endmaß für die Vorhangbreite.',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'stueckzahl',
-    label: 'Stückzahl',
-    description: 'Wie viele Stück werden benötigt?',
-    type: 'number',
-    required: true,
-  },
-  {
-    key: 'vorhangschiene',
-    label: 'Vorhangschiene',
-    description: 'Wähle die Form der Schiene.',
-    type: 'select',
-    options: vorhangschieneOptions,
-  },
-  {
-    key: 'vorhangschieneB',
-    label: 'Vorhangschiene B (mm)',
-    description: 'Breite / Länge der Schiene.',
-    type: 'number',
-  },
-  {
-    key: 'befestigungstypSchiene',
-    label: 'Befestigungstyp Schiene',
-    description: 'Wähle die passende Befestigung.',
-    type: 'select',
-    options: befestigungOptions,
-  },
-  {
-    key: 'foto',
-    label: 'Foto',
-    description: 'Verknüpfe den Eintrag mit einem Foto.',
-    type: 'select',
-    options: fotoOptions,
-  },
-  {
-    key: 'kommentar',
-    label: 'Kommentar',
-    description: 'Zusätzliche Hinweise für Bestellung oder Montage.',
-    type: 'textarea',
-  },
+  { key: 'bereich', label: 'Bereich', description: 'Wähle den Bereich aus der Projektliste.', type: 'select', options: bereichOptions, required: true },
+  { key: 'vorhang', label: 'Vorhang / Referenznummer', description: 'Wähle den passenden Vorhang oder die Referenznummer.', type: 'select', options: vorhangOptions, required: true },
+  { key: 'lichteDeckenhoehe', label: 'Lichte Deckenhöhe', description: 'Optionales Maß in Millimetern.', type: 'number' },
+  { key: 'oberkanteVorhangschiene', label: 'Oberkante Vorhangschiene', description: 'Optionales Maß in Millimetern.', type: 'number' },
+  { key: 'hoehe', label: 'H - Höhe (mm)', description: 'Endmaß für die Vorhanghöhe.', type: 'number', required: true },
+  { key: 'breite', label: 'B - Breite (mm)', description: 'Endmaß für die Vorhangbreite.', type: 'number', required: true },
+  { key: 'stueckzahl', label: 'Stückzahl', description: 'Wie viele Stück werden benötigt?', type: 'number', required: true },
+  { key: 'vorhangschiene', label: 'Vorhangschiene', description: 'Wähle die Form der Schiene.', type: 'select', options: vorhangschieneOptions },
+  { key: 'vorhangschieneB', label: 'Vorhangschiene B (mm)', description: 'Breite / Länge der Schiene.', type: 'number' },
+  { key: 'befestigungstypSchiene', label: 'Befestigungstyp Schiene', description: 'Wähle die passende Befestigung.', type: 'select', options: befestigungOptions },
+  { key: 'foto', label: 'Foto', description: 'Verknüpfe den Eintrag mit einem Foto.', type: 'select', options: fotoOptions },
+  { key: 'kommentar', label: 'Kommentar', description: 'Zusätzliche Hinweise für Bestellung oder Montage.', type: 'textarea' },
 ];
 
 function fieldIsValid(step, draft) {
@@ -218,11 +148,21 @@ function WizardField({ step, value, onChange }) {
   );
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export default function App() {
   const [draft, setDraft] = useState(emptyDraft);
   const [items, setItems] = useState([]);
   const [stepIndex, setStepIndex] = useState(0);
   const [showReview, setShowReview] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editingDraft, setEditingDraft] = useState(null);
 
   const currentStep = useMemo(() => steps[stepIndex], [stepIndex]);
   const progress = Math.round(((showReview ? steps.length + 1 : stepIndex + 1) / (steps.length + 1)) * 100);
@@ -341,34 +281,37 @@ export default function App() {
       .map(
         (item) => `
           <tr>
-            <td>${item.nummer ?? ''}</td>
-            <td>${item.bereich ?? ''}</td>
-            <td>${item.vorhang ?? ''}</td>
-            <td>${item.lichteDeckenhoehe ?? ''}</td>
-            <td>${item.oberkanteVorhangschiene ?? ''}</td>
-            <td>${item.hoehe ?? ''}</td>
-            <td>${item.breite ?? ''}</td>
-            <td>${item.stueckzahl ?? ''}</td>
-            <td>${item.vorhangschiene ?? ''}</td>
-            <td>${item.vorhangschieneB ?? ''}</td>
-            <td>${item.befestigungstypSchiene ?? ''}</td>
-            <td>${item.foto ?? ''}</td>
-            <td>${item.kommentar ?? ''}</td>
+            <td>${escapeHtml(item.nummer)}</td>
+            <td>${escapeHtml(item.bereich)}</td>
+            <td>${escapeHtml(item.vorhang)}</td>
+            <td>${escapeHtml(item.lichteDeckenhoehe)}</td>
+            <td>${escapeHtml(item.oberkanteVorhangschiene)}</td>
+            <td>${escapeHtml(item.hoehe)}</td>
+            <td>${escapeHtml(item.breite)}</td>
+            <td>${escapeHtml(item.stueckzahl)}</td>
+            <td>${escapeHtml(item.vorhangschiene)}</td>
+            <td>${escapeHtml(item.vorhangschieneB)}</td>
+            <td>${escapeHtml(item.befestigungstypSchiene)}</td>
+            <td>${escapeHtml(item.foto)}</td>
+            <td>${escapeHtml(item.kommentar)}</td>
           </tr>
         `
       )
       .join('');
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
     if (!printWindow) return;
 
+    printWindow.document.open();
     printWindow.document.write(`
+      <!doctype html>
       <html>
         <head>
-          <title>Vorhänge PDF Export</title>
+          <meta charset="utf-8" />
+          <title>Vorhänge Bestelltabelle</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-            h1 { margin: 0 0 16px; }
+            h1 { margin: 0 0 16px; font-size: 24px; }
             table { width: 100%; border-collapse: collapse; font-size: 12px; }
             th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
             th { background: #f3f4f6; }
@@ -395,103 +338,7 @@ export default function App() {
                 <th>Kommentar</th>
               </tr>
             </thead>
-            <tbody>
-                    {items.map((item) => {
-                      const isEditing = editingId === item.id;
-                      return (
-                        <tr key={item.id}>
-                          <td>{item.nummer}</td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" value={editingDraft?.bereich || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, bereich: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.bereich || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <select className="table-edit-select" value={editingDraft?.vorhang || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhang: e.target.value }))} onKeyDown={handleEditKeyDown}>
-                                <option value="">Bitte auswählen</option>
-                                {vorhangOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                              </select>
-                            ) : item.vorhang || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.lichteDeckenhoehe || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, lichteDeckenhoehe: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.lichteDeckenhoehe || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.oberkanteVorhangschiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, oberkanteVorhangschiene: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.oberkanteVorhangschiene || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.hoehe || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, hoehe: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.hoehe || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.breite || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, breite: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.breite || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.stueckzahl || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, stueckzahl: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.stueckzahl || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <select className="table-edit-select" value={editingDraft?.vorhangschiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschiene: e.target.value }))} onKeyDown={handleEditKeyDown}>
-                                <option value="">Bitte auswählen</option>
-                                {vorhangschieneOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                              </select>
-                            ) : item.vorhangschiene || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <input className="table-edit-input" type="number" value={editingDraft?.vorhangschieneB || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschieneB: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.vorhangschieneB || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <select className="table-edit-select" value={editingDraft?.befestigungstypSchiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, befestigungstypSchiene: e.target.value }))} onKeyDown={handleEditKeyDown}>
-                                <option value="">Bitte auswählen</option>
-                                {befestigungOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                              </select>
-                            ) : item.befestigungstypSchiene || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <select className="table-edit-select" value={editingDraft?.foto || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, foto: e.target.value }))} onKeyDown={handleEditKeyDown}>
-                                <option value="">Bitte auswählen</option>
-                                {fotoOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                              </select>
-                            ) : item.foto || '—'}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <textarea className="table-edit-textarea" value={editingDraft?.kommentar || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, kommentar: e.target.value }))} onKeyDown={handleEditKeyDown} />
-                            ) : item.kommentar || '—'}
-                          </td>
-                          <td>
-                            <div className="row-actions">
-                              {isEditing ? (
-                                <>
-                                  <button className="save-btn" onClick={saveEditing}>Speichern</button>
-                                  <button className="cancel-btn" onClick={cancelEditing}>Abbrechen</button>
-                                </>
-                              ) : (
-                                <>
-                                  <button className="edit-btn" onClick={() => startEditing(item)}>Bearbeiten</button>
-                                  <button className="delete-btn" onClick={() => removeItem(item.id)}>Löschen</button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
+            <tbody>${rowsHtml}</tbody>
           </table>
         </body>
       </html>
@@ -519,11 +366,7 @@ export default function App() {
             linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
         }
         #root { min-height: 100vh; }
-        .page {
-          max-width: 1320px;
-          margin: 0 auto;
-          padding: 28px 20px 40px;
-        }
+        .page { max-width: 1320px; margin: 0 auto; padding: 28px 20px 40px; }
         .hero, .panel {
           background: rgba(255,255,255,0.78);
           border: 1px solid rgba(148,163,184,0.18);
@@ -531,351 +374,92 @@ export default function App() {
           backdrop-filter: blur(12px);
           border-radius: 28px;
         }
-        .hero {
-          padding: 28px 30px;
-          margin-bottom: 22px;
-        }
-        .hero-top {
-          display: flex;
-          align-items: center;
-          gap: 18px;
-          margin-bottom: 12px;
-        }
+        .hero { padding: 28px 30px; margin-bottom: 22px; }
+        .hero-top { display: flex; align-items: center; gap: 18px; margin-bottom: 12px; }
         .logo-wrap {
-          width: 132px;
-          height: 54px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.7);
-          border: 1px solid rgba(148,163,184,0.16);
-          overflow: hidden;
-          flex-shrink: 0;
+          width: 132px; height: 54px; display: flex; align-items: center; justify-content: center;
+          border-radius: 16px; background: rgba(255,255,255,0.7); border: 1px solid rgba(148,163,184,0.16);
+          overflow: hidden; flex-shrink: 0;
         }
-        .logo-wrap img {
-          max-width: 110px;
-          max-height: 40px;
-          object-fit: contain;
-        }
+        .logo-wrap img { max-width: 110px; max-height: 40px; object-fit: contain; }
         .badge {
-          display: inline-flex;
-          padding: 10px 14px;
-          border-radius: 999px;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          background: rgba(79,70,229,0.08);
-          color: #4f46e5;
-          border: 1px solid rgba(99,102,241,0.16);
-          font-weight: 700;
+          display: inline-flex; padding: 10px 14px; border-radius: 999px; font-size: 12px;
+          text-transform: uppercase; letter-spacing: .08em; background: rgba(79,70,229,0.08);
+          color: #4f46e5; border: 1px solid rgba(99,102,241,0.16); font-weight: 700;
         }
-        .hero h1 {
-          margin: 8px 0 6px;
-          font-size: 44px;
-          line-height: 1.02;
-          letter-spacing: -0.03em;
-        }
-        .hero p {
-          margin: 0;
-          max-width: 820px;
-          color: #475569;
-          font-size: 16px;
-          line-height: 1.65;
-        }
-        .stack-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 22px;
-        }
+        .hero h1 { margin: 8px 0 6px; font-size: 44px; line-height: 1.02; letter-spacing: -0.03em; }
+        .hero p { margin: 0; max-width: 820px; color: #475569; font-size: 16px; line-height: 1.65; }
+        .stack-layout { display: flex; flex-direction: column; gap: 22px; }
         .panel { padding: 24px; }
-        .panel-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 18px;
-        }
-        .panel-head h2 {
-          margin: 0;
-          font-size: 30px;
-          letter-spacing: -0.03em;
-        }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .panel-head h2 { margin: 0; font-size: 30px; letter-spacing: -0.03em; }
         .counter {
-          padding: 10px 14px;
-          border-radius: 999px;
-          font-size: 14px;
-          color: #7c3aed;
-          background: rgba(124,58,237,0.08);
-          border: 1px solid rgba(167,139,250,0.18);
-          font-weight: 700;
+          padding: 10px 14px; border-radius: 999px; font-size: 14px; color: #7c3aed;
+          background: rgba(124,58,237,0.08); border: 1px solid rgba(167,139,250,0.18); font-weight: 700;
         }
         .progress-box { margin-bottom: 22px; }
         .progress-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-          font-size: 13px;
-          color: #64748b;
-          font-weight: 600;
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+          font-size: 13px; color: #64748b; font-weight: 600;
         }
-        .progress-bar {
-          height: 10px;
-          border-radius: 999px;
-          background: #e2e8f0;
-          overflow: hidden;
-        }
+        .progress-bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
         .progress-value {
-          height: 100%;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #8b5cf6, #3b82f6);
-          transition: width .25s ease;
+          height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8b5cf6, #3b82f6); transition: width .25s ease;
         }
         .step-card {
-          min-height: 340px;
-          border-radius: 24px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.9));
-          border: 1px solid rgba(148,163,184,0.14);
-          padding: 22px;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+          min-height: 340px; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(248,250,252,0.9));
+          border: 1px solid rgba(148,163,184,0.14); padding: 22px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
         }
-        .step-kicker {
-          color: #6366f1;
-          font-size: 12px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          margin-bottom: 10px;
-        }
-        .step-card h3 {
-          margin: 0 0 8px;
-          font-size: 28px;
-          letter-spacing: -0.03em;
-        }
-        .step-card p {
-          margin: 0 0 20px;
-          color: #64748b;
-          line-height: 1.6;
-          max-width: 800px;
-        }
-        .wizard-label {
-          display: block;
-          margin-bottom: 10px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #334155;
-        }
+        .step-kicker { color: #6366f1; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+        .step-card h3 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.03em; }
+        .step-card p { margin: 0 0 20px; color: #64748b; line-height: 1.6; max-width: 800px; }
+        .wizard-label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: #334155; }
         .wizard-input, .wizard-textarea {
-          width: 100%;
-          border-radius: 18px;
-          border: 1px solid rgba(148,163,184,0.22);
-          background: #fff;
-          color: #0f172a;
-          outline: none;
-          transition: .18s ease;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+          width: 100%; border-radius: 18px; border: 1px solid rgba(148,163,184,0.22); background: #fff;
+          color: #0f172a; outline: none; transition: .18s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
         }
-        .wizard-input {
-          height: 58px;
-          padding: 0 16px;
-          font-size: 16px;
-        }
-        .wizard-textarea {
-          min-height: 150px;
-          padding: 14px 16px;
-          font-size: 15px;
-          resize: vertical;
-        }
-        .wizard-input:focus, .wizard-textarea:focus {
-          border-color: rgba(59,130,246,0.52);
-          box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
-        }
-        .error-text {
-          margin-top: 10px;
-          color: #dc2626;
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .wizard-actions {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          margin-top: 18px;
-        }
-        .btn {
-          border: 0;
-          cursor: pointer;
-          border-radius: 16px;
-          transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-          font-weight: 800;
-        }
+        .wizard-input { height: 58px; padding: 0 16px; font-size: 16px; }
+        .wizard-textarea { min-height: 150px; padding: 14px 16px; font-size: 15px; resize: vertical; }
+        .wizard-input:focus, .wizard-textarea:focus { border-color: rgba(59,130,246,0.52); box-shadow: 0 0 0 4px rgba(59,130,246,0.10); }
+        .error-text { margin-top: 10px; color: #dc2626; font-size: 13px; font-weight: 600; }
+        .wizard-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+        .btn { border: 0; cursor: pointer; border-radius: 16px; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; font-weight: 800; }
         .btn:hover { transform: translateY(-1px); }
         .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-        .btn-secondary {
-          height: 50px;
-          padding: 0 18px;
-          background: #fff;
-          color: #334155;
-          border: 1px solid rgba(148,163,184,0.24);
-        }
-        .btn-primary {
-          height: 50px;
-          padding: 0 18px;
-          color: white;
-          background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-          box-shadow: 0 14px 30px rgba(99,102,241,0.18);
-        }
-        .review-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-          margin-top: 4px;
-        }
-        .review-item {
-          background: #fff;
-          border: 1px solid rgba(148,163,184,0.14);
-          border-radius: 18px;
-          padding: 14px;
-        }
-        .review-item small {
-          display: block;
-          color: #64748b;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          font-weight: 800;
-          margin-bottom: 6px;
-        }
-        .review-item div {
-          color: #0f172a;
-          font-size: 14px;
-          line-height: 1.5;
-          word-break: break-word;
-        }
-        .table-top-actions {
-          display: flex;
-          justify-content: flex-end;
-          margin-bottom: 14px;
-        }
-        .table-wrap {
-          overflow: auto;
-          border-radius: 22px;
-          border: 1px solid rgba(148,163,184,0.14);
-          background: rgba(255,255,255,0.78);
-        }
-        table {
-          width: 100%;
-          min-width: 1560px;
-          border-collapse: collapse;
-        }
-        thead th {
-          text-align: left;
-          padding: 15px 14px;
-          background: #f8fafc;
-          color: #475569;
-          font-size: 13px;
-          border-bottom: 1px solid rgba(148,163,184,0.16);
-          white-space: nowrap;
-        }
-        tbody td {
-          padding: 14px;
-          border-bottom: 1px solid rgba(148,163,184,0.10);
-          font-size: 14px;
-          color: #0f172a;
-          vertical-align: top;
-        }
+        .btn-secondary { height: 50px; padding: 0 18px; background: #fff; color: #334155; border: 1px solid rgba(148,163,184,0.24); }
+        .btn-primary { height: 50px; padding: 0 18px; color: white; background: linear-gradient(135deg, #8b5cf6, #3b82f6); box-shadow: 0 14px 30px rgba(99,102,241,0.18); }
+        .review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 4px; }
+        .review-item { background: #fff; border: 1px solid rgba(148,163,184,0.14); border-radius: 18px; padding: 14px; }
+        .review-item small { display: block; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; margin-bottom: 6px; }
+        .review-item div { color: #0f172a; font-size: 14px; line-height: 1.5; word-break: break-word; }
+        .table-top-actions { display: flex; justify-content: flex-end; margin-bottom: 14px; gap: 10px; }
+        .table-wrap { overflow: auto; border-radius: 22px; border: 1px solid rgba(148,163,184,0.14); background: rgba(255,255,255,0.78); }
+        table { width: 100%; min-width: 1560px; border-collapse: collapse; }
+        thead th { text-align: left; padding: 15px 14px; background: #f8fafc; color: #475569; font-size: 13px; border-bottom: 1px solid rgba(148,163,184,0.16); white-space: nowrap; }
+        tbody td { padding: 14px; border-bottom: 1px solid rgba(148,163,184,0.10); font-size: 14px; color: #0f172a; vertical-align: top; }
         tbody tr:hover { background: rgba(99,102,241,0.03); }
         .empty {
-          min-height: 360px;
-          border: 1px dashed rgba(148,163,184,0.20);
-          border-radius: 24px;
-          display: grid;
-          place-items: center;
-          padding: 26px;
-          text-align: center;
-          background: linear-gradient(180deg, #fafbff, #f8fafc);
+          min-height: 360px; border: 1px dashed rgba(148,163,184,0.20); border-radius: 24px; display: grid; place-items: center;
+          padding: 26px; text-align: center; background: linear-gradient(180deg, #fafbff, #f8fafc);
         }
         .empty-icon {
-          width: 82px;
-          height: 82px;
-          border-radius: 26px;
-          display: grid;
-          place-items: center;
-          margin: 0 auto 14px;
-          font-size: 28px;
-          color: #6d28d9;
-          background: rgba(124,58,237,0.10);
-          border: 1px solid rgba(167,139,250,0.18);
+          width: 82px; height: 82px; border-radius: 26px; display: grid; place-items: center; margin: 0 auto 14px;
+          font-size: 28px; color: #6d28d9; background: rgba(124,58,237,0.10); border: 1px solid rgba(167,139,250,0.18);
         }
-        .empty h3 {
-          margin: 0 0 8px;
-          font-size: 20px;
+        .empty h3 { margin: 0 0 8px; font-size: 20px; }
+        .empty p { margin: 0; color: #64748b; line-height: 1.6; max-width: 460px; }
+        .delete-btn, .edit-btn, .save-btn, .cancel-btn {
+          height: 34px; padding: 0 12px; border-radius: 10px; font-weight: 800; cursor: pointer;
         }
-        .empty p {
-          margin: 0;
-          color: #64748b;
-          line-height: 1.6;
-          max-width: 460px;
-        }
-        .delete-btn {
-          height: 34px;
-          padding: 0 12px;
-          border-radius: 10px;
-          background: rgba(239,68,68,0.08);
-          color: #b91c1c;
-          border: 1px solid rgba(239,68,68,0.14);
-          font-weight: 800;
-          cursor: pointer;
-        }
-        .edit-btn {
-          height: 34px;
-          padding: 0 12px;
-          border-radius: 10px;
-          background: rgba(59,130,246,0.08);
-          color: #1d4ed8;
-          border: 1px solid rgba(59,130,246,0.14);
-          font-weight: 800;
-          cursor: pointer;
-        }
-        .save-btn {
-          height: 34px;
-          padding: 0 12px;
-          border-radius: 10px;
-          background: rgba(34,197,94,0.10);
-          color: #166534;
-          border: 1px solid rgba(34,197,94,0.18);
-          font-weight: 800;
-          cursor: pointer;
-        }
-        .cancel-btn {
-          height: 34px;
-          padding: 0 12px;
-          border-radius: 10px;
-          background: rgba(100,116,139,0.08);
-          color: #334155;
-          border: 1px solid rgba(148,163,184,0.16);
-          font-weight: 800;
-          cursor: pointer;
-        }
-        .row-actions {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
+        .delete-btn { background: rgba(239,68,68,0.08); color: #b91c1c; border: 1px solid rgba(239,68,68,0.14); }
+        .edit-btn { background: rgba(59,130,246,0.08); color: #1d4ed8; border: 1px solid rgba(59,130,246,0.14); }
+        .save-btn { background: rgba(34,197,94,0.10); color: #166534; border: 1px solid rgba(34,197,94,0.18); }
+        .cancel-btn { background: rgba(100,116,139,0.08); color: #334155; border: 1px solid rgba(148,163,184,0.16); }
+        .row-actions { display: flex; gap: 8px; align-items: center; }
         .table-edit-input, .table-edit-textarea, .table-edit-select {
-          width: 100%;
-          border: 1px solid rgba(148,163,184,0.25);
-          border-radius: 10px;
-          padding: 8px 10px;
-          font-size: 13px;
-          background: #fff;
-          color: #0f172a;
+          width: 100%; border: 1px solid rgba(148,163,184,0.25); border-radius: 10px; padding: 8px 10px; font-size: 13px; background: #fff; color: #0f172a;
         }
-        .table-edit-textarea {
-          min-height: 72px;
-          resize: vertical;
-        }
+        .table-edit-textarea { min-height: 72px; resize: vertical; }
         @media (max-width: 900px) {
           .hero h1 { font-size: 36px; }
           .review-grid { grid-template-columns: 1fr 1fr; }
@@ -978,7 +562,7 @@ export default function App() {
               <div className="counter">Excel bereit</div>
             </div>
 
-            <div className="table-top-actions" style={{ gap: '10px' }}>
+            <div className="table-top-actions">
               <button className="btn btn-secondary" onClick={exportPdf}>PDF speichern</button>
               <button className="btn btn-secondary" onClick={exportExcel}>Excel herunterladen</button>
             </div>
@@ -1013,26 +597,199 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.nummer}</td>
-                        <td>{item.bereich || '—'}</td>
-                        <td>{item.vorhang || '—'}</td>
-                        <td>{item.lichteDeckenhoehe || '—'}</td>
-                        <td>{item.oberkanteVorhangschiene || '—'}</td>
-                        <td>{item.hoehe || '—'}</td>
-                        <td>{item.breite || '—'}</td>
-                        <td>{item.stueckzahl || '—'}</td>
-                        <td>{item.vorhangschiene || '—'}</td>
-                        <td>{item.vorhangschieneB || '—'}</td>
-                        <td>{item.befestigungstypSchiene || '—'}</td>
-                        <td>{item.foto || '—'}</td>
-                        <td>{item.kommentar || '—'}</td>
-                        <td>
-                          <button className="delete-btn" onClick={() => removeItem(item.id)}>Löschen</button>
-                        </td>
-                      </tr>
-                    ))}
+                    {items.map((item) => {
+                      const isEditing = editingId === item.id;
+                      return (
+                        <tr key={item.id}>
+                          <td>{item.nummer}</td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                value={editingDraft?.bereich || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, bereich: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.bereich || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                className="table-edit-select"
+                                value={editingDraft?.vorhang || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhang: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              >
+                                <option value="">Bitte auswählen</option>
+                                {vorhangOptions.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              item.vorhang || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.lichteDeckenhoehe || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, lichteDeckenhoehe: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.lichteDeckenhoehe || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.oberkanteVorhangschiene || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, oberkanteVorhangschiene: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.oberkanteVorhangschiene || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.hoehe || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, hoehe: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.hoehe || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.breite || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, breite: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.breite || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.stueckzahl || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, stueckzahl: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.stueckzahl || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                className="table-edit-select"
+                                value={editingDraft?.vorhangschiene || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschiene: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              >
+                                <option value="">Bitte auswählen</option>
+                                {vorhangschieneOptions.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              item.vorhangschiene || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                className="table-edit-input"
+                                type="number"
+                                value={editingDraft?.vorhangschieneB || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschieneB: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.vorhangschieneB || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                className="table-edit-select"
+                                value={editingDraft?.befestigungstypSchiene || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, befestigungstypSchiene: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              >
+                                <option value="">Bitte auswählen</option>
+                                {befestigungOptions.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              item.befestigungstypSchiene || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                className="table-edit-select"
+                                value={editingDraft?.foto || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, foto: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              >
+                                <option value="">Bitte auswählen</option>
+                                {fotoOptions.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              item.foto || '—'
+                            )}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <textarea
+                                className="table-edit-textarea"
+                                value={editingDraft?.kommentar || ''}
+                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, kommentar: e.target.value }))}
+                                onKeyDown={handleEditKeyDown}
+                              />
+                            ) : (
+                              item.kommentar || '—'
+                            )}
+                          </td>
+                          <td>
+                            <div className="row-actions">
+                              {isEditing ? (
+                                <>
+                                  <button className="save-btn" onClick={saveEditing}>Speichern</button>
+                                  <button className="cancel-btn" onClick={cancelEditing}>Abbrechen</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button className="edit-btn" onClick={() => startEditing(item)}>Bearbeiten</button>
+                                  <button className="delete-btn" onClick={() => removeItem(item.id)}>Löschen</button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
