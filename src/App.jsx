@@ -230,6 +230,18 @@ export default function App() {
     }
   };
 
+  const handleEditingChange = (key, value, saveImmediately = false) => {
+    setEditingDraft((prev) => {
+      const next = { ...prev, [key]: value };
+      if (saveImmediately) {
+        setTimeout(() => {
+          setItems((itemsPrev) => itemsPrev.map((item) => (item.id === editingId ? { ...next } : item)));
+        }, 0);
+      }
+      return next;
+    });
+  };
+
   const exportExcel = () => {
     if (items.length === 0) {
       alert('Bitte zuerst mindestens einen Eintrag hinzufügen.');
@@ -299,11 +311,13 @@ export default function App() {
       )
       .join('');
 
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
-    if (!printWindow) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Bitte Pop-ups für diese Seite erlauben.');
+      return;
+    }
 
-    printWindow.document.open();
-    printWindow.document.write(`
+    const html = `
       <!doctype html>
       <html>
         <head>
@@ -342,10 +356,15 @@ export default function App() {
           </table>
         </body>
       </html>
-    `);
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
   };
 
   return (
@@ -607,7 +626,7 @@ export default function App() {
                               <input
                                 className="table-edit-input"
                                 value={editingDraft?.bereich || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, bereich: e.target.value }))}
+                                onChange={(e) => handleEditingChange('bereich', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -619,7 +638,7 @@ export default function App() {
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.vorhang || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhang: e.target.value }))}
+                                onChange={(e) => handleEditingChange('vorhang', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
@@ -637,7 +656,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.lichteDeckenhoehe || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, lichteDeckenhoehe: e.target.value }))}
+                                onChange={(e) => handleEditingChange('lichteDeckenhoehe', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -650,7 +669,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.oberkanteVorhangschiene || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, oberkanteVorhangschiene: e.target.value }))}
+                                onChange={(e) => handleEditingChange('oberkanteVorhangschiene', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -663,7 +682,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.hoehe || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, hoehe: e.target.value }))}
+                                onChange={(e) => handleEditingChange('hoehe', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -676,7 +695,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.breite || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, breite: e.target.value }))}
+                                onChange={(e) => handleEditingChange('breite', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -689,7 +708,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.stueckzahl || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, stueckzahl: e.target.value }))}
+                                onChange={(e) => handleEditingChange('stueckzahl', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -701,7 +720,7 @@ export default function App() {
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.vorhangschiene || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschiene: e.target.value }))}
+                                onChange={(e) => handleEditingChange('vorhangschiene', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
@@ -719,7 +738,7 @@ export default function App() {
                                 className="table-edit-input"
                                 type="number"
                                 value={editingDraft?.vorhangschieneB || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschieneB: e.target.value }))}
+                                onChange={(e) => handleEditingChange('vorhangschieneB', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
@@ -731,7 +750,7 @@ export default function App() {
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.befestigungstypSchiene || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, befestigungstypSchiene: e.target.value }))}
+                                onChange={(e) => handleEditingChange('befestigungstypSchiene', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
@@ -748,7 +767,7 @@ export default function App() {
                               <select
                                 className="table-edit-select"
                                 value={editingDraft?.foto || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, foto: e.target.value }))}
+                                onChange={(e) => handleEditingChange('foto', e.target.value, true)
                                 onKeyDown={handleEditKeyDown}
                               >
                                 <option value="">Bitte auswählen</option>
@@ -765,7 +784,7 @@ export default function App() {
                               <textarea
                                 className="table-edit-textarea"
                                 value={editingDraft?.kommentar || ''}
-                                onChange={(e) => setEditingDraft((prev) => ({ ...prev, kommentar: e.target.value }))}
+                                onChange={(e) => handleEditingChange('kommentar', e.target.value)
                                 onKeyDown={handleEditKeyDown}
                               />
                             ) : (
