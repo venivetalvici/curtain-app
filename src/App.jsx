@@ -68,7 +68,6 @@ const vorhangOptions = [
 
 const vorhangschieneOptions = ['Gerade', 'L-Forme', 'U-Forme', 'Sonder'];
 const befestigungOptions = [
-  'Deckenträger',
   'Deckenabhangträger <150cm',
   'Deckenabhangträger >150cm',
   'Wandhalterung / Lager',
@@ -261,6 +260,34 @@ export default function App() {
 
   const removeItem = (id) => {
     setItems((prev) => prev.filter((item) => item.id !== id).map((item, idx) => ({ ...item, nummer: idx + 1 })));
+    if (editingId === id) {
+      setEditingId(null);
+      setEditingDraft(null);
+    }
+  };
+
+  const startEditing = (item) => {
+    setEditingId(item.id);
+    setEditingDraft({ ...item });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingDraft(null);
+  };
+
+  const saveEditing = () => {
+    if (!editingDraft) return;
+    setItems((prev) => prev.map((item) => (item.id === editingId ? { ...editingDraft } : item)));
+    setEditingId(null);
+    setEditingDraft(null);
+  };
+
+  const handleEditKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      saveEditing();
+    }
   };
 
   const exportExcel = () => {
@@ -302,6 +329,176 @@ export default function App() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Vorhänge');
     XLSX.writeFile(wb, 'vorhaenge_bestellformular.xlsx');
+  };
+
+  const exportPdf = () => {
+    if (items.length === 0) {
+      alert('Bitte zuerst mindestens einen Eintrag hinzufügen.');
+      return;
+    }
+
+    const rowsHtml = items
+      .map(
+        (item) => `
+          <tr>
+            <td>${item.nummer ?? ''}</td>
+            <td>${item.bereich ?? ''}</td>
+            <td>${item.vorhang ?? ''}</td>
+            <td>${item.lichteDeckenhoehe ?? ''}</td>
+            <td>${item.oberkanteVorhangschiene ?? ''}</td>
+            <td>${item.hoehe ?? ''}</td>
+            <td>${item.breite ?? ''}</td>
+            <td>${item.stueckzahl ?? ''}</td>
+            <td>${item.vorhangschiene ?? ''}</td>
+            <td>${item.vorhangschieneB ?? ''}</td>
+            <td>${item.befestigungstypSchiene ?? ''}</td>
+            <td>${item.foto ?? ''}</td>
+            <td>${item.kommentar ?? ''}</td>
+          </tr>
+        `
+      )
+      .join('');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Vorhänge PDF Export</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            h1 { margin: 0 0 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+            th { background: #f3f4f6; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <h1>Vorhänge Bestelltabelle</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Bereich</th>
+                <th>Vorhang / Referenznummer</th>
+                <th>Lichte Deckenhöhe</th>
+                <th>Oberkante Vorhangschiene</th>
+                <th>H</th>
+                <th>B</th>
+                <th>Stück</th>
+                <th>Schiene</th>
+                <th>Schiene B</th>
+                <th>Befestigung</th>
+                <th>Foto</th>
+                <th>Kommentar</th>
+              </tr>
+            </thead>
+            <tbody>
+                    {items.map((item) => {
+                      const isEditing = editingId === item.id;
+                      return (
+                        <tr key={item.id}>
+                          <td>{item.nummer}</td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" value={editingDraft?.bereich || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, bereich: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.bereich || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select className="table-edit-select" value={editingDraft?.vorhang || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhang: e.target.value }))} onKeyDown={handleEditKeyDown}>
+                                <option value="">Bitte auswählen</option>
+                                {vorhangOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                              </select>
+                            ) : item.vorhang || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.lichteDeckenhoehe || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, lichteDeckenhoehe: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.lichteDeckenhoehe || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.oberkanteVorhangschiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, oberkanteVorhangschiene: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.oberkanteVorhangschiene || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.hoehe || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, hoehe: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.hoehe || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.breite || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, breite: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.breite || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.stueckzahl || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, stueckzahl: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.stueckzahl || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select className="table-edit-select" value={editingDraft?.vorhangschiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschiene: e.target.value }))} onKeyDown={handleEditKeyDown}>
+                                <option value="">Bitte auswählen</option>
+                                {vorhangschieneOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                              </select>
+                            ) : item.vorhangschiene || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <input className="table-edit-input" type="number" value={editingDraft?.vorhangschieneB || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, vorhangschieneB: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.vorhangschieneB || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select className="table-edit-select" value={editingDraft?.befestigungstypSchiene || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, befestigungstypSchiene: e.target.value }))} onKeyDown={handleEditKeyDown}>
+                                <option value="">Bitte auswählen</option>
+                                {befestigungOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                              </select>
+                            ) : item.befestigungstypSchiene || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <select className="table-edit-select" value={editingDraft?.foto || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, foto: e.target.value }))} onKeyDown={handleEditKeyDown}>
+                                <option value="">Bitte auswählen</option>
+                                {fotoOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                              </select>
+                            ) : item.foto || '—'}
+                          </td>
+                          <td>
+                            {isEditing ? (
+                              <textarea className="table-edit-textarea" value={editingDraft?.kommentar || ''} onChange={(e) => setEditingDraft((prev) => ({ ...prev, kommentar: e.target.value }))} onKeyDown={handleEditKeyDown} />
+                            ) : item.kommentar || '—'}
+                          </td>
+                          <td>
+                            <div className="row-actions">
+                              {isEditing ? (
+                                <>
+                                  <button className="save-btn" onClick={saveEditing}>Speichern</button>
+                                  <button className="cancel-btn" onClick={cancelEditing}>Abbrechen</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button className="edit-btn" onClick={() => startEditing(item)}>Bearbeiten</button>
+                                  <button className="delete-btn" onClick={() => removeItem(item.id)}>Löschen</button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   return (
@@ -631,6 +828,54 @@ export default function App() {
           font-weight: 800;
           cursor: pointer;
         }
+        .edit-btn {
+          height: 34px;
+          padding: 0 12px;
+          border-radius: 10px;
+          background: rgba(59,130,246,0.08);
+          color: #1d4ed8;
+          border: 1px solid rgba(59,130,246,0.14);
+          font-weight: 800;
+          cursor: pointer;
+        }
+        .save-btn {
+          height: 34px;
+          padding: 0 12px;
+          border-radius: 10px;
+          background: rgba(34,197,94,0.10);
+          color: #166534;
+          border: 1px solid rgba(34,197,94,0.18);
+          font-weight: 800;
+          cursor: pointer;
+        }
+        .cancel-btn {
+          height: 34px;
+          padding: 0 12px;
+          border-radius: 10px;
+          background: rgba(100,116,139,0.08);
+          color: #334155;
+          border: 1px solid rgba(148,163,184,0.16);
+          font-weight: 800;
+          cursor: pointer;
+        }
+        .row-actions {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .table-edit-input, .table-edit-textarea, .table-edit-select {
+          width: 100%;
+          border: 1px solid rgba(148,163,184,0.25);
+          border-radius: 10px;
+          padding: 8px 10px;
+          font-size: 13px;
+          background: #fff;
+          color: #0f172a;
+        }
+        .table-edit-textarea {
+          min-height: 72px;
+          resize: vertical;
+        }
         @media (max-width: 900px) {
           .hero h1 { font-size: 36px; }
           .review-grid { grid-template-columns: 1fr 1fr; }
@@ -657,7 +902,7 @@ export default function App() {
           </div>
           <h1>Vorhang Formular</h1>
           <p>
-            
+            Светлая версия приложения с логотипом и пошаговым мастером. Сначала вопрос на всю ширину, потом под ним таблица на всю ширину — без неудобного бокового скролла между блоками.
           </p>
         </section>
 
@@ -733,7 +978,8 @@ export default function App() {
               <div className="counter">Excel bereit</div>
             </div>
 
-            <div className="table-top-actions">
+            <div className="table-top-actions" style={{ gap: '10px' }}>
+              <button className="btn btn-secondary" onClick={exportPdf}>PDF speichern</button>
               <button className="btn btn-secondary" onClick={exportExcel}>Excel herunterladen</button>
             </div>
 
