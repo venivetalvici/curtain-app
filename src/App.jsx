@@ -69,6 +69,7 @@ const vorhangOptions = [
 const vorhangschieneOptions = ['Gerade', 'L-Forme', 'U-Forme', 'Sonder'];
 
 const befestigungOptions = [
+  'Deckenträger',
   'Deckenabhangträger <150cm',
   'Deckenabhangträger >150cm',
   'Wandhalterung / Lager',
@@ -1046,7 +1047,7 @@ export default function App() {
           </div>
           <h1>Vorhang Formular</h1>
           <p>
-            Светлая версия приложения с логотипом и пошаговым мастером. Сначала вопрос на всю ширину, потом под ним таблица на всю ширину — без неудобного бокового скролла между блоками.
+          Bitte
           </p>
         </section>
 
