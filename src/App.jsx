@@ -68,6 +68,7 @@ const vorhangOptions = [
 
 const vorhangschieneOptions = ['Gerade', 'L-Forme', 'U-Forme', 'Sonder'];
 const befestigungOptions = [
+  'Deckenträger',
   'Deckenabhangträger <150cm',
   'Deckenabhangträger >150cm',
   'Wandhalterung / Lager',
